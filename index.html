@@ -2083,6 +2083,40 @@
 		chatButton.classList.add('slide-up-animation');
 	}, 3000);
 </script>
+<!-- Fix links that start with '/' to point to local html/*.html when served as static files -->
+<script>
+	(function () {
+		document.addEventListener('click', function (e) {
+			var a = e.target.closest ? e.target.closest('a') : null;
+			if (!a) return;
+			var href = a.getAttribute('href');
+			if (!href) return;
+			// ignore protocol-relative (//), anchors (#) and full URLs
+			if (href.indexOf('//') === 0 || href.indexOf('http://') === 0 || href.indexOf('https://') === 0 || href.indexOf('#') === 0) return;
+			// handle absolute-root links like /slug -> html/slug.html
+			if (href.charAt(0) === '/') {
+				// ignore internal assets or special paths
+				var skipPrefixes = ['/dist', '/cdn-cgi', '/s', '/cdn'];
+				for (var i = 0; i < skipPrefixes.length; i++) {
+					if (href.indexOf(skipPrefixes[i]) === 0) return;
+				}
+				e.preventDefault();
+				if (href === '/') {
+					window.location.href = 'index.html';
+					return;
+				}
+				var path = href.slice(1);
+				// if already contains extension, just prefix html/ if not a directory
+				if (path.indexOf('.') === -1) {
+					// route article/category to html/<slug>.html
+					window.location.href = 'html/' + path + '.html';
+				} else {
+					window.location.href = 'html/' + path;
+				}
+			}
+		}, false);
+	})();
+</script>
 <style>
 	.fb-chat-button {
 		position: fixed;
